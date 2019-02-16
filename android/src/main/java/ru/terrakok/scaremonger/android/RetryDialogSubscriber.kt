@@ -1,4 +1,4 @@
-package ru.terrakok.scaremonger.subscriber
+package ru.terrakok.scaremonger.android
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -30,11 +30,11 @@ class RetryDialogSubscriber(
 
     fun resume(emitter: ScaremongerEmitter) {
         this.emitter = emitter
-        emitter.subscriber = this
+        emitter.subscribe(this)
     }
 
     fun pause() {
-        emitter?.subscriber = null
+        emitter?.unsubscribe()
         dialogs.forEach { it.dismiss() }
         dialogs.clear()
     }
