@@ -19,6 +19,7 @@ class DontRepeatDispatcher : ScaremongerDispatcher {
         this.subscriber = null
         callbackMap.forEach { _, list -> list.forEach { it(false) } }
         callbackMap.clear()
+        disposableMap.clear()
     }
 
     override fun request(
