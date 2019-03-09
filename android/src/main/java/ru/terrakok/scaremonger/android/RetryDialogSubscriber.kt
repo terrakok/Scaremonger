@@ -2,6 +2,7 @@ package ru.terrakok.scaremonger.android
 
 import android.app.Activity
 import android.app.AlertDialog
+import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerEmitter
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
@@ -16,7 +17,10 @@ class RetryDialogSubscriber(
     private var emitter: ScaremongerEmitter? = null
     private val dialogs = mutableListOf<AlertDialog>()
 
-    override fun request(error: Throwable, callback: (retry: Boolean) -> Unit) {
+    override fun request(
+        error: Throwable,
+        callback: (retry: Boolean) -> Unit
+    ): ScaremongerDisposable {
         val d = AlertDialog.Builder(activity).apply {
             setTitle(titleText)
             setMessage(msgCreator(error))
@@ -26,6 +30,13 @@ class RetryDialogSubscriber(
         }.create()
         dialogs.add(d)
         d.show()
+
+        return object : ScaremongerDisposable {
+            override fun dispose() {
+                dialogs.remove(d)
+                d.dismiss()
+            }
+        }
     }
 
     fun resume(emitter: ScaremongerEmitter) {
