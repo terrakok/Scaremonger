@@ -30,7 +30,7 @@ private fun Flowable<Throwable>.handleErrors() =
         .observeOn(AndroidSchedulers.mainThread())
         .flatMapSingle<Unit> { err ->
             Single.create<Unit> { s ->
-                val id = Scaremonger.newRequest(err) { retry ->
+                val disposable = Scaremonger.request(err) { retry ->
                     if (retry) s.onSuccess(Unit) else s.onError(err)
                 }
                 s.setDisposable(object : Disposable {
@@ -39,7 +39,7 @@ private fun Flowable<Throwable>.handleErrors() =
 
                     override fun dispose() {
                         disposed = true
-                        Scaremonger.cancelRequest(id)
+                        disposable.dispose()
                     }
                 })
             }

@@ -1,5 +1,7 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.FakeDisposable
+import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
 class ForkDispatcher(
@@ -17,14 +19,23 @@ class ForkDispatcher(
         this.subscriber = null
     }
 
-    override fun request(error: Throwable, callback: (retry: Boolean) -> Unit) {
+    override fun request(
+        error: Throwable,
+        callback: (retry: Boolean) -> Unit
+    ): ScaremongerDisposable {
         if (mainRule(error)) {
-            subscriber?.request(error, callback) ?: run {
+            subscriber?.let { s ->
+                return s.request(error, callback)
+            } ?: run {
                 callback(false)
+                return FakeDisposable
             }
         } else {
-            forkedSubscriber?.request(error, callback) ?: run {
+            forkedSubscriber?.let { s ->
+                return s.request(error, callback)
+            } ?: run {
                 callback(false)
+                return FakeDisposable
             }
         }
     }

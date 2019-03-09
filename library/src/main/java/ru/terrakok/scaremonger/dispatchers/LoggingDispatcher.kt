@@ -1,5 +1,7 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.FakeDisposable
+import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
 class LoggingDispatcher(
@@ -16,10 +18,17 @@ class LoggingDispatcher(
         this.subscriber = null
     }
 
-    override fun request(error: Throwable, callback: (retry: Boolean) -> Unit) {
+    override fun request(
+        error: Throwable,
+        callback: (retry: Boolean) -> Unit
+    ): ScaremongerDisposable {
         logger(error)
-        subscriber?.request(error, callback) ?: run {
+
+        subscriber?.let { s ->
+            return s.request(error, callback)
+        } ?: run {
             callback(false)
+            return FakeDisposable
         }
     }
 }

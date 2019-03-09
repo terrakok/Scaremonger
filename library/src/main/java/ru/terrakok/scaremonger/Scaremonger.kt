@@ -1,10 +1,6 @@
 package ru.terrakok.scaremonger
 
-import java.util.*
-
-object Scaremonger : ScaremongerEmitter {
-
-    private val listeners: MutableMap<String, (retry: Boolean) -> Unit> = mutableMapOf()
+object Scaremonger : ScaremongerEmitter, ScaremongerSubscriber {
 
     private var subscriber: ScaremongerSubscriber? = null
 
@@ -16,32 +12,15 @@ object Scaremonger : ScaremongerEmitter {
         this.subscriber = null
     }
 
-    fun newRequest(
+    override fun request(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
-    ): String {
-        val id = UUID.randomUUID().toString()
-        listeners[id] = callback
-        dispatchRequest(id, error)
-        return id
-    }
-
-    fun cancelRequest(id: String) {
-        listeners.remove(id)
-    }
-
-    private fun dispatchRequest(id: String, error: Throwable) {
+    ): ScaremongerDisposable {
         subscriber?.let { s ->
-            s.request(error) { sendResponse(id, it) }
+            return s.request(error, callback)
         } ?: run {
-            sendResponse(id, false)
-        }
-    }
-
-    private fun sendResponse(id: String, retry: Boolean) {
-        listeners[id]?.let { listener ->
-            listener(retry)
-            listeners.remove(id)
+            callback(false)
+            return FakeDisposable
         }
     }
 }

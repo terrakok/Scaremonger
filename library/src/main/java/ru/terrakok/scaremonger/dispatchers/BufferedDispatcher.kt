@@ -1,15 +1,17 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
-import java.util.*
 
 class BufferedDispatcher : ScaremongerDispatcher {
 
     private class Request(val error: Throwable, val callback: (retry: Boolean) -> Unit)
 
-    private val buffer: Queue<Request> = LinkedList()
+    private val buffer = ArrayList<Request>()
 
     private var subscriber: ScaremongerSubscriber? = null
+    private var currentRequest: Request? = null
+    private var currentDisposable: ScaremongerDisposable? = null
 
     override fun subscribe(subscriber: ScaremongerSubscriber) {
         this.subscriber = subscriber
@@ -18,12 +20,32 @@ class BufferedDispatcher : ScaremongerDispatcher {
 
     override fun unsubscribe() {
         this.subscriber = null
+        this.currentRequest = null
+        this.currentDisposable = null
     }
 
-    override fun request(error: Throwable, callback: (retry: Boolean) -> Unit) {
-        buffer.add(Request(error, callback))
+    override fun request(
+        error: Throwable,
+        callback: (retry: Boolean) -> Unit
+    ): ScaremongerDisposable {
+        val r = Request(error, callback)
+        buffer.add(r)
+
         if (buffer.size == 1) { //this is first request
             tryNewRequest()
+        }
+
+        return object : ScaremongerDisposable {
+            override fun dispose() {
+                buffer.remove(r)
+                if (currentRequest == r) {
+                    currentDisposable?.dispose()
+
+                    currentRequest = null
+                    currentDisposable = null
+                    tryNewRequest()
+                }
+            }
         }
     }
 
@@ -31,13 +53,19 @@ class BufferedDispatcher : ScaremongerDispatcher {
         val s = subscriber
         if (s != null && buffer.isNotEmpty()) {
             val r = buffer.last()
-            s.request(r.error) { retry -> onResponse(retry) }
+            currentRequest = r
+            currentDisposable = s.request(r.error) { retry -> onResponse(retry) }
         }
     }
 
     private fun onResponse(retry: Boolean) {
-        val r = buffer.remove()
-        r.callback(retry)
+        currentRequest?.let { r ->
+            buffer.remove(r)
+            r.callback(retry)
+        }
+
+        currentRequest = null
+        currentDisposable = null
         tryNewRequest()
     }
 }
