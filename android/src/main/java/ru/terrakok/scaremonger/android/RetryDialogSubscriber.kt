@@ -21,22 +21,28 @@ class RetryDialogSubscriber(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
-        val d = AlertDialog.Builder(activity).apply {
+        var d: AlertDialog? = null
+        val disposable = ScaremongerDisposable {
+            dialogs.remove(d)
+            d?.dismiss()
+        }
+        d = AlertDialog.Builder(activity).apply {
             setTitle(titleText)
             setMessage(msgCreator(error))
-            setPositiveButton(retryButtonText) { _, _ -> callback(true) }
-            setNegativeButton(cancelButtonText) { _, _ -> callback(false) }
+            setPositiveButton(retryButtonText) { _, _ ->
+                disposable.isDisposed = true
+                callback(true)
+            }
+            setNegativeButton(cancelButtonText) { _, _ ->
+                disposable.isDisposed = true
+                callback(false)
+            }
             setCancelable(false)
         }.create()
         dialogs.add(d)
         d.show()
 
-        return object : ScaremongerDisposable {
-            override fun dispose() {
-                dialogs.remove(d)
-                d.dismiss()
-            }
-        }
+        return disposable
     }
 
     fun resume(emitter: ScaremongerEmitter) {

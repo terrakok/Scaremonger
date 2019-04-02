@@ -20,7 +20,7 @@ object Scaremonger : ScaremongerEmitter, ScaremongerSubscriber {
             return s.request(error, callback)
         } ?: run {
             callback(false)
-            return FakeDisposable
+            return ScaremongerDisposable()
         }
     }
 }

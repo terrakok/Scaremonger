@@ -5,7 +5,11 @@ import ru.terrakok.scaremonger.ScaremongerSubscriber
 
 class BufferedDispatcher : ScaremongerDispatcher {
 
-    private class Request(val error: Throwable, val callback: (retry: Boolean) -> Unit)
+    private class Request(
+        val error: Throwable,
+        val callback: (retry: Boolean) -> Unit,
+        val disposable: ScaremongerDisposable
+    )
 
     private val buffer = ArrayList<Request>()
 
@@ -28,24 +32,26 @@ class BufferedDispatcher : ScaremongerDispatcher {
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
-        val r = Request(error, callback)
-        buffer.add(r)
+        var r: Request? = null
+        val disposable = ScaremongerDisposable { disposeRequest(r!!) }
+        r = Request(error, callback, disposable)
 
+        buffer.add(r)
         if (buffer.size == 1) { //this is first request
             tryNewRequest()
         }
 
-        return object : ScaremongerDisposable {
-            override fun dispose() {
-                buffer.remove(r)
-                if (currentRequest == r) {
-                    currentDisposable?.dispose()
+        return disposable
+    }
 
-                    currentRequest = null
-                    currentDisposable = null
-                    tryNewRequest()
-                }
-            }
+    private fun disposeRequest(r: Request) {
+        buffer.remove(r)
+        if (currentRequest == r) {
+            currentDisposable?.dispose()
+
+            currentRequest = null
+            currentDisposable = null
+            tryNewRequest()
         }
     }
 
@@ -61,6 +67,7 @@ class BufferedDispatcher : ScaremongerDispatcher {
     private fun onResponse(retry: Boolean) {
         currentRequest?.let { r ->
             buffer.remove(r)
+            r.disposable.isDisposed = true
             r.callback(retry)
         }
 

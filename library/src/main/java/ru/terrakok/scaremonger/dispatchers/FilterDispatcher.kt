@@ -1,6 +1,5 @@
 package ru.terrakok.scaremonger.dispatchers
 
-import ru.terrakok.scaremonger.FakeDisposable
 import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
@@ -27,11 +26,11 @@ class FilterDispatcher(
                 return s.request(error, callback)
             } ?: run {
                 callback(false)
-                return FakeDisposable
+                return ScaremongerDisposable()
             }
         } else {
             callback(false)
-            return FakeDisposable
+            return ScaremongerDisposable()
         }
     }
 }

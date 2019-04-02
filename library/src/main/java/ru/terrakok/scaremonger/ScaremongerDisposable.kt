@@ -1,9 +1,9 @@
 package ru.terrakok.scaremonger
 
-interface ScaremongerDisposable {
-    fun dispose()
-}
+class ScaremongerDisposable(private val block: (() -> Unit)? = null) {
+    var isDisposed: Boolean = false
 
-object FakeDisposable : ScaremongerDisposable {
-    override fun dispose() {}
+    fun dispose() {
+        if (!isDisposed) block?.invoke()
+    }
 }
