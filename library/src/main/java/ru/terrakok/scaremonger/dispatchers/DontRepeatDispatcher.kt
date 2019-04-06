@@ -1,5 +1,6 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.ScaremongerDispatcher
 import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
@@ -26,7 +27,7 @@ class DontRepeatDispatcher : ScaremongerDispatcher {
         disposableMap.clear()
     }
 
-    override fun request(
+    override fun onNext(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
@@ -49,7 +50,7 @@ class DontRepeatDispatcher : ScaremongerDispatcher {
             list.add(r)
 
             if (firstRequest) {
-                disposableMap[type] = s.request(error) { retry -> onResponse(type, retry) }
+                disposableMap[type] = s.onNext(error) { retry -> onResponse(type, retry) }
             }
             return disposable
         } ?: run {

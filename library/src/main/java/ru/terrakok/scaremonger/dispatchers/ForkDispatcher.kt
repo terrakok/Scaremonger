@@ -1,5 +1,6 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.ScaremongerDispatcher
 import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
@@ -18,20 +19,20 @@ class ForkDispatcher(
         this.subscriber = null
     }
 
-    override fun request(
+    override fun onNext(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
         if (mainRule(error)) {
             subscriber?.let { s ->
-                return s.request(error, callback)
+                return s.onNext(error, callback)
             } ?: run {
                 callback(false)
                 return ScaremongerDisposable()
             }
         } else {
             forkedSubscriber?.let { s ->
-                return s.request(error, callback)
+                return s.onNext(error, callback)
             } ?: run {
                 callback(false)
                 return ScaremongerDisposable()

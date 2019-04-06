@@ -1,6 +1,6 @@
 package ru.terrakok.scaremonger
 
-object Scaremonger : ScaremongerEmitter, ScaremongerSubscriber {
+object Scaremonger : ScaremongerDispatcher {
 
     private var subscriber: ScaremongerSubscriber? = null
 
@@ -12,12 +12,12 @@ object Scaremonger : ScaremongerEmitter, ScaremongerSubscriber {
         this.subscriber = null
     }
 
-    override fun request(
+    override fun onNext(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
         subscriber?.let { s ->
-            return s.request(error, callback)
+            return s.onNext(error, callback)
         } ?: run {
             callback(false)
             return ScaremongerDisposable()

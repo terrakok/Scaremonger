@@ -17,7 +17,7 @@ class RetryDialogSubscriber(
     private var emitter: ScaremongerEmitter? = null
     private val dialogs = mutableListOf<AlertDialog>()
 
-    override fun request(
+    override fun onNext(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {

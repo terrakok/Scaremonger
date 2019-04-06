@@ -1,5 +1,6 @@
 package ru.terrakok.scaremonger.dispatchers
 
+import ru.terrakok.scaremonger.ScaremongerDispatcher
 import ru.terrakok.scaremonger.ScaremongerDisposable
 import ru.terrakok.scaremonger.ScaremongerSubscriber
 
@@ -28,7 +29,7 @@ class BufferedDispatcher : ScaremongerDispatcher {
         this.currentDisposable = null
     }
 
-    override fun request(
+    override fun onNext(
         error: Throwable,
         callback: (retry: Boolean) -> Unit
     ): ScaremongerDisposable {
@@ -37,7 +38,7 @@ class BufferedDispatcher : ScaremongerDispatcher {
         r = Request(error, callback, disposable)
 
         buffer.add(r)
-        if (buffer.size == 1) { //this is first request
+        if (buffer.size == 1) { //this is first onNext
             tryNewRequest()
         }
 
@@ -60,7 +61,7 @@ class BufferedDispatcher : ScaremongerDispatcher {
         if (s != null && buffer.isNotEmpty()) {
             val r = buffer.last()
             currentRequest = r
-            currentDisposable = s.request(r.error) { retry -> onResponse(retry) }
+            currentDisposable = s.onNext(r.error) { retry -> onResponse(retry) }
         }
     }
 

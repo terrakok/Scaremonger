@@ -1,7 +1,4 @@
-package ru.terrakok.scaremonger.dispatchers
-
-import ru.terrakok.scaremonger.ScaremongerEmitter
-import ru.terrakok.scaremonger.ScaremongerSubscriber
+package ru.terrakok.scaremonger
 
 interface ScaremongerDispatcher : ScaremongerEmitter, ScaremongerSubscriber {
 
