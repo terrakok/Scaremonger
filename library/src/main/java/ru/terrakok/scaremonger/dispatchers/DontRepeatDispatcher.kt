@@ -22,7 +22,7 @@ class DontRepeatDispatcher : ScaremongerDispatcher {
 
     override fun unsubscribe() {
         this.subscriber = null
-        callbackMap.forEach { _, list -> list.forEach { it.callback(false) } }
+        callbackMap.forEach { (_, list) -> list.forEach { it.callback(false) } }
         callbackMap.clear()
         disposableMap.clear()
     }
